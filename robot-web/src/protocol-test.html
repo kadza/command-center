@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WS Protocol Tester</title>
+    <style>
+      body { font-family: sans-serif; margin: 2rem; }
+      textarea { width: 100%; max-width: 600px; }
+    </style>
+  </head>
+  <body>
+    <h2>WebSocket Protocol Tester</h2>
+    <textarea id="log" rows="10" readonly></textarea><br>
+    <button onclick="connect()">Connect</button>
+    <button onclick="sendCmd('W')">Send {cmd:W}</button>
+    <button onclick="sendCmd('A')">Send {cmd:A}</button>
+    <button onclick="sendCmd('S')">Send {cmd:S}</button>
+    <button onclick="sendCmd('D')">Send {cmd:D}</button>
+    <button onclick="sendCmd('STOP')">Send {cmd:STOP}</button>
+    <script>
+      let ws;
+      const log = document.getElementById('log');
+      function append(msg) {
+        log.value += msg + '\n';
+        log.scrollTop = log.scrollHeight;
+      }
+      function connect() {
+        ws = new WebSocket('ws://localhost:9001');
+        ws.onopen = () => append('OPEN');
+        ws.onmessage = e => append('RECV: ' + e.data);
+        ws.onclose = () => append('CLOSE');
+      }
+      function sendCmd(key) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          append('WebSocket not open');
+          return;
+        }
+        const msg = JSON.stringify({ type: 'cmd', payload: key });
+        append('SEND: ' + msg);
+        ws.send(msg);
+      }
+    </script>
+  </body>
+</html>

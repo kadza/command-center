@@ -1,0 +1,9 @@
+# Ignore build artifacts
+/target/
+
+# IDE and editor folders
+.idea/
+.vscode/
+
+# macOS metadata
+.DS_Store
