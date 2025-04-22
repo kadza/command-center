@@ -1,8 +1,16 @@
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 use futures_util::{StreamExt, SinkExt};
-use serde_json::Value;
+use serde::Deserialize;
 use anyhow::Result;
+
+// Define the JSON message structure for commands
+#[derive(Deserialize)]
+struct Msg {
+    #[serde(rename = "type")]
+    msg_type: String,
+    payload: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,11 +33,20 @@ async fn main() -> Result<()> {
                         if msg.is_text() {
                             let txt = msg.to_text().unwrap();
                             println!("Received: {}", txt);
-
-                            // Try to parse as JSON, for validation
-                            match serde_json::from_str::<Value>(txt) {
-                                Ok(v) => println!("Parsed JSON: {:?}", v),
-                                Err(_) => println!("Failed to parse JSON"),
+                            // Try to parse as command message
+                            if let Ok(cmd_msg) = serde_json::from_str::<Msg>(txt) {
+                                if cmd_msg.msg_type == "cmd" {
+                                    match cmd_msg.payload.as_str() {
+                                        "W"    => println!("▶ Motor stub: FORWARD"),
+                                        "S"    => println!("▶ Motor stub: BACKWARD"),
+                                        "A"    => println!("▶ Motor stub: TURN LEFT"),
+                                        "D"    => println!("▶ Motor stub: TURN RIGHT"),
+                                        "STOP" => println!("▶ Motor stub: STOP ALL MOTORS"),
+                                        other   => println!("▶ Motor stub: UNKNOWN `{}`", other),
+                                    }
+                                }
+                            } else {
+                                println!("Failed to deserialize as command Msg");
                             }
 
                             // Echo the message back
