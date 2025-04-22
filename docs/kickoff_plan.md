@@ -19,9 +19,14 @@ Below is a high‑level roadmap to bootstrap development and validate the core c
    • Build a Rust echo server (`tokio-tungstenite` or `warp`) to mirror incoming messages.
    • Create a simple web page to open a WS, send test JSON, and log responses.
 
-3. Motor control stub
-   • In the Rust WS server, stub motor commands: log “▶ forward” on `\"W\"`.
-   • In the UI, bind WASD keys to WS messages; confirm server logs.
+3. Motor control implementation (COMPLETED)
+   • Added `robot-pi/src/motor.rs` with `MotorController` using `rppal` to drive L293D IN pins.
+     – Pin pairs: (17,18) for Motor A; (27,22) for Motor B. EN1/EN2 tied high on the driver.
+   • Integrated into `robot-pi/src/main.rs`:
+     – Shared controller wrapped in `Arc<AsyncMutex<MotorController>>`.
+     – WS cmd messages (`"W"`,`"A"`,`"S"`,`"D"`,`"STOP"`) invoke `forward()`, `turn_left()`, `backward()`, `turn_right()`, `stop()` respectively.
+   • Provided a no-op stub on non-Linux platforms for local development.
+   • UI WASD binding in `robot-web/src/main.ts` remains to send JSON cmd messages to trigger motor actions.
 
 4. Position updates
    • Simulate GNSS RTK feed in Rust: send `{ \"type\": \"pos\", … }` with dummy coords every second.
