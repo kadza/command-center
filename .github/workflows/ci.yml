@@ -1,0 +1,101 @@
+name: CI Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ARM Binary & Web UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Add Cargo bin to PATH
+        run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install cross (for ARM cross-compilation)
+        run: cargo install cross --locked
+
+      - name: Build robot-pi for ARM
+        run: cross build --release --target armv7-unknown-linux-gnueabihf --manifest-path robot-pi/Cargo.toml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      - name: Install web dependencies
+        run: |
+          cd robot-web
+          npm ci
+
+      - name: Build web assets
+        run: |
+          cd robot-web
+          npm run build
+
+      - name: Upload robot-pi artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: robot-pi-arm-binary
+          path: robot-pi/target/armv7-unknown-linux-gnueabihf/release/robot-pi
+
+      - name: Upload web-dist artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: robot-web-dist
+          path: robot-web/dist/
+
+  deploy:
+    name: Deploy to Raspberry Pi
+    needs: build
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      secrets.PI_SSH_PRIVATE_KEY &&
+      secrets.PI_HOST &&
+      secrets.PI_USER
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download robot-pi artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: robot-pi-arm-binary
+          path: .
+
+      - name: Download web-dist artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: robot-web-dist
+          path: web-dist
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.PI_SSH_PRIVATE_KEY }}
+
+      - name: Copy robot-pi binary to Pi
+        run: |
+          scp robot-pi-arm-binary ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/robot-control/robot-pi/target/release/robot-pi
+
+      - name: Copy web assets to Pi
+        run: |
+          scp -r web-dist/* ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/robot-control/robot-web/dist/
+
+      - name: Restart robot-pi service
+        run: |
+          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "sudo systemctl restart robot-pi"

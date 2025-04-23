@@ -145,11 +145,18 @@ The goal is to build a command center to remotely control a two-wheeled robot vi
 
 Below is a high‑level roadmap to bootstrap development and validate the core control-feedback loop quickly:
 
-1. Automated build & deployment
+1. Automated build & deployment (Completed)
    • Set up CI (e.g. GitHub Actions) to cross-compile `robot-pi` for ARM (Raspberry Pi) and build `robot-web` assets.
    • Produce release binaries and web bundles as CI artifacts.
    • Implement deployment scripts (SSH/SCP) to install the `robot-pi` binary and web assets on the Pi and restart the service.
    • Raspberry Pi runtime needs only `ffmpeg` and a systemd service; no local Rust or Node.js installations.
+   
+   ✅ Summary of actions:
+   • Created GitHub Actions workflow `.github/workflows/ci.yml` to:
+     - cross-compile `robot-pi` for ARM using `cross`
+     - build `robot-web` assets with Node.js
+     - upload build artifacts and deploy via SSH to the Pi on main branch
+   • Added `scripts/deploy.sh` to perform manual SSH/SCP deployment and service restart.
 
 2. Project scaffolding & environment
    • Create a mono‑repo with subfolders `robot-pi` (Rust) and `robot-web` (TypeScript).
