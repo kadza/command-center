@@ -158,3 +158,24 @@ The goal is to build a command center to remotely control a two-wheeled robot vi
 - Ensure that all software dependencies (e.g., Rust, `ffmpeg`, WebSocket server) are clearly documented for both the robot and PC.
 - The Raspberry Pi should run a startup script to ensure the WebSocket server and video streaming process begin automatically on boot.
 - Make the GUI accessible via a local network IP address for ease of connection.
+  
+## Manual Deployment
+
+After your code is built by GitHub Actions, you can deploy the latest ARM binary and web assets to your Pi locally using the GitHub CLI and the provided script:
+
+1. Make sure you have the GitHub CLI (`gh`) installed and authenticated (e.g. `gh auth login`).
+
+2. Run the deploy script:
+   ```bash
+   PI_HOST=<pi_host_or_ip> [PI_USER=<pi_user>] [SSH_KEY=<path_to_ssh_key>] ./scripts/deploy.sh
+   ```
+
+By default:
+  - `PI_USER` defaults to `pi`.
+  - `SSH_KEY` defaults to `~/.ssh/id_rsa`.
+
+The script will:
+  - Fetch the latest successful run of the `ci.yml` workflow on the `main` branch.
+  - Download the `robot-pi-arm-binary` artifact and the `robot-web-dist` artifact.
+  - Copy them into `/home/<pi_user>/robot-control/robot-pi/target/release/robot-pi` and `/home/<pi_user>/robot-control/robot-web/dist/`.
+  - Restart the `robot-pi` systemd service on the Raspberry Pi.

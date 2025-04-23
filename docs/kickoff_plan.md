@@ -2,10 +2,10 @@
 
 Below is a high‑level roadmap to bootstrap development and validate the core control-feedback loop quickly:
 
-1. Automated build & deployment (Completed)
+1. Automated build (Completed)
    • Set up CI (e.g. GitHub Actions) to cross-compile `robot-pi` for ARM (Raspberry Pi) and build `robot-web` assets.
    • Produce release binaries and web bundles as CI artifacts.
-   • Implement deployment scripts (SSH/SCP) to install the `robot-pi` binary and web assets on the Pi and restart the service.
+   • Provide deployment script (`scripts/deploy.sh`) to manually fetch artifacts and install the `robot-pi` binary and web assets on the Pi and restart the service.
    • Raspberry Pi runtime needs only `ffmpeg` and a systemd service; no local Rust or Node.js installations.
 
    ✅ Summary of actions:
@@ -13,7 +13,7 @@ Below is a high‑level roadmap to bootstrap development and validate the core c
 
    - cross-compile `robot-pi` for ARM using `cross`
    - build `robot-web` assets with Node.js
-   - upload build artifacts and deploy via SSH to the Pi on main branch
+   - upload build artifacts to GitHub Actions artifacts on main branch (deployment is manual via `scripts/deploy.sh`)
      • Added `scripts/deploy.sh` to perform manual SSH/SCP deployment and service restart.
 
 2. Project scaffolding & environment
