@@ -68,8 +68,11 @@ mod imp {
         }
     }
 
-    pub use MotorController;
 }
+
+// Re-export MotorController at crate root for Linux platforms
+#[cfg(target_os = "linux")]
+pub use imp::MotorController;
 
 /// Stub implementation for non-Linux platforms (no-op).
 #[cfg(not(target_os = "linux"))]
@@ -77,10 +80,13 @@ pub struct MotorController;
 
 #[cfg(not(target_os = "linux"))]
 impl MotorController {
-    pub fn new() -> Result<Self> { Ok(Self) }
+    pub fn new() -> Result<Self> {
+        Ok(Self)
+    }
     pub fn forward(&mut self) {}
     pub fn backward(&mut self) {}
     pub fn turn_left(&mut self) {}
     pub fn turn_right(&mut self) {}
     pub fn stop(&mut self) {}
 }
+
